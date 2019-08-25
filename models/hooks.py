@@ -1,5 +1,6 @@
 from functools import partial
 from matplotlib import pyplot as plt
+import numpy as np
 import torch
 
 
@@ -97,5 +98,5 @@ class HistHooks(Hooks):
             fig, axes = plt.subplots(round(n_layers / 2), 2, figsize=(15, n_layers * 4))
             for ax, h in zip(axes.flatten(), hooks):
                 ax.set_title(h.layer_name)
-                ax.plot(self.get_min(h))
+                ax.plot(np.array(self.get_min(h)))
                 ax.set_ylim(0, 1)

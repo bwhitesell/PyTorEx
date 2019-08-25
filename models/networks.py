@@ -1,3 +1,4 @@
+from collections import Iterable
 import torch
 from torch import nn
 from torch import optim
@@ -14,9 +15,20 @@ class NeuralNetwork(nn.Module):
         return x
 
     def fit(self, train_dl, val_dl, epochs, lr=.001, criterion=nn.CrossEntropyLoss(), metric=Accuracy(),
-            optimizer=optim.Adam):
-        # init optimizer
-        optimizer = optimizer(self.parameters(), lr=lr)
+            optimizer=optim.Adam, weight_decay=0, layer_lrs=[]):
+
+        # check if were scheduling the learning rate
+        if isinstance(lr, Iterable):
+            lr_start = lr[0]
+            sched = True
+        else:
+            lr_start = lr
+            sched = False
+
+        if layer_lrs:
+            optimizer = optimizer(layer_lrs, lr=lr_start, weight_decay=weight_decay)
+        else:
+            optimizer = optimizer(self.parameters(), lr=lr_start, weight_decay=weight_decay)
         n_batches = len(train_dl)
 
         for epoch in range(epochs):  # loop over the training data
@@ -25,6 +37,9 @@ class NeuralNetwork(nn.Module):
 
             for i, data in enumerate(train_dl, 0):
                 inputs, labels = data
+                if sched:
+                    for param_group in optimizer.param_groups:
+                        param_group['lr'] = lr[i]
 
                 # forward
                 outputs = self.forward(inputs)
