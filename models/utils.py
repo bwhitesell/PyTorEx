@@ -1,11 +1,11 @@
 import torch
+import numpy as np
 
 
 def eval_in_batches(ds, net, criteria, metric=None):
     loss = 0
-    total = 0
-    correct = 0
-    for i, data in enumerate(ds, 0):
+
+    for i, data in enumerate(ds):
         inputs, labels = data
         outputs = net(inputs)
         loss += criteria(net(inputs), labels).item()
@@ -13,7 +13,7 @@ def eval_in_batches(ds, net, criteria, metric=None):
             metric.update(outputs, labels)
 
     metric_eval = metric.eval() if metric else None
-    return loss / (i + 1), metric_eval
+    return loss / (len(ds) + 1), metric_eval
 
 
 class Accuracy:
@@ -27,6 +27,22 @@ class Accuracy:
 
     def eval(self):
         return self.correct / self.total
+
+
+class RMSPE:
+    err = 0
+    n_labels = 1
+
+    def update(self, outputs, labels):
+        if (labels == 0).sum() == 0:
+            labels = torch.exp(labels) - 1
+            outputs = torch.exp(outputs.flatten()) - 1
+            pct_err = ((labels - outputs) / labels)**2
+            self.err += pct_err.sum()
+            self.n_labels += labels.size()[0]
+
+    def eval(self):
+        return np.sqrt(self.err / self.n_labels)
 
 
 def standard_kfold_train(k, baseline, features, target, model):

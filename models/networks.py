@@ -59,7 +59,7 @@ class NeuralNetwork(nn.Module):
                 self.eval()  # tell layers to adopt eval behaviors
                 val_loss, mtrk = eval_in_batches(val_dl, self, criterion, metric=metric)
                 print(f'Epoch: {epoch}, batch {i}/{n_batches}] Test loss: {val_loss}' \
-                      + f' Train loss: {train_loss / i} | Test Accuracy: {mtrk}'
+                      + f' Train loss: {train_loss / i} | Test Metric: {mtrk}'
                       , end='\n')
 
         print('Finished Training')
